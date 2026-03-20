@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Docker 3-Tier App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 2.5rem; color: #38bdf8; margin-bottom: 0.5rem; }
+    p.subtitle { color: #94a3b8; margin-bottom: 2rem; }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 { font-size: 1.1rem; color: #7dd3fc; margin-bottom: 1rem; }
+    .status { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
+    .dot.ok { background: #22c55e; }
+    .dot.err { background: #ef4444; }
+    button {
+      background: #0369a1;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #0284c7; }
+    pre {
+      background: #0f172a;
+      border-radius: 6px;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #a3e635;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐳 3-Tier Docker App</h1>
+  <p class="subtitle">FiftyFive Technologies · DevOps Intern Assessment</p>
+
+  <div class="card">
+    <h2>Service Health</h2>
+    <div class="status">
+      <div class="dot ok"></div>
+      <span>Frontend (Nginx) — running</span>
+    </div>
+    <div class="status" id="backend-status">
+      <div class="dot" id="backend-dot"></div>
+      <span id="backend-text">Backend — checking...</span>
+    </div>
+    <div class="status" id="db-status">
+      <div class="dot" id="db-dot"></div>
+      <span id="db-text">Database — checking...</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>API Tests</h2>
+    <button onclick="fetchAPI('/')">GET /api/</button>
+    <button onclick="fetchAPI('/health')">GET /api/health</button>
+    <pre id="result">Results will appear here...</pre>
+  </div>
+
+  <script>
+    async function fetchAPI(path) {
+      const result = document.getElementById('result');
+      result.textContent = 'Loading...';
+      try {
+        const res = await fetch('/api' + path);
+        const data = await res.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        result.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        document.getElementById('backend-dot').className = 'dot ok';
+        document.getElementById('backend-text').textContent = 'Backend — online';
+        const dbOk = data.database === 'ok';
+        document.getElementById('db-dot').className = 'dot ' + (dbOk ? 'ok' : 'err');
+        document.getElementById('db-text').textContent = 'Database — ' + (dbOk ? 'connected' : 'unavailable');
+      } catch {
+        document.getElementById('backend-dot').className = 'dot err';
+        document.getElementById('backend-text').textContent = 'Backend — unreachable';
+        document.getElementById('db-dot').className = 'dot err';
+        document.getElementById('db-text').textContent = 'Database — unknown';
+      }
+    }
+
+    checkHealth();
+    setInterval(checkHealth, 10000);
+  </script>
+</body>
+</html>
