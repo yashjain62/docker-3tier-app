@@ -2,9 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-// DB config from env variables only — never hardcoded
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -22,12 +21,10 @@ async function getPool() {
   return pool;
 }
 
-// GET / — basic OK response
 app.get('/', async (req, res) => {
   res.json({ status: 'ok', message: 'Backend API is running', timestamp: new Date().toISOString() });
 });
 
-// GET /health — DB health check
 app.get('/health', async (req, res) => {
   let dbStatus = 'error';
   let dbMessage = null;
@@ -37,7 +34,6 @@ app.get('/health', async (req, res) => {
     dbStatus = 'ok';
   } catch (err) {
     dbMessage = err.message;
-    // Reset pool so next call retries
     pool = null;
   }
 
